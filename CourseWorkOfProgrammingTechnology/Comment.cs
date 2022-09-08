@@ -1,8 +1,10 @@
-﻿namespace CourseWorkOfProgrammingTechnology
+﻿using Excel = Microsoft.Office.Interop.Excel;
+
+namespace CourseWorkOfProgrammingTechnology
 {
     class Comment
     {
-        static public int defaultColor;
+        static public int defaultColor = (int)Excel.XlColorIndex.xlColorIndexNone;
         readonly public string text;
         readonly public int color;
 

@@ -1,14 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
+using System.Diagnostics;
 using System.Windows.Forms;
-
-using Excel = Microsoft.Office.Interop.Excel;
 
 namespace CourseWorkOfProgrammingTechnology
 {
     class SystemInputData
     {
+        private string _filePath = @"C:\Users\batar\Desktop\Курсавая работа\Шаблон исходных данных к КР (Братцев).xlsx";// = @"C:\Users\batar\Desktop\Шаблон исходных данных к КР (Братцев).xlsx";
+        public string FilePath { get { return _filePath; } }
+
+        private string _pathToTeacherSignature = @"C:\Users\batar\Desktop\Курсавая работа\ПодписьРецензента.jpg";
+        public string PathToTeacherSignature { get { return _pathToTeacherSignature; } }
+
+        private string _folderPath = string.Empty;
+        public string FolderPath { get { return _folderPath; } }
+
         private void ShowFileDialog(OpenFileDialog openFileDialog, string filter, out string filePath)
         {
             filePath = string.Empty;
@@ -23,23 +30,14 @@ namespace CourseWorkOfProgrammingTechnology
                 filePath = openFileDialog.FileName;
             }
         }
-
-        private string _filePath = string.Empty;// = @"C:\Users\batar\Desktop\Шаблон исходных данных к КР (Братцев).xlsx";
-        public string FilePath { get { return _filePath; } }
         public void ShowFileDialogForInputDateFile(OpenFileDialog openFileDialog)
         {
             ShowFileDialog(openFileDialog, filter: "excel files (*.xlsx)|*.xlsx", out _filePath);
         }
-
-        private string _pathToTeacherSignature = string.Empty;
-        public string PathToTeacherSignature { get { return _pathToTeacherSignature; } }
-        public void ShowFileDialogForSignature(OpenFileDialog openFileDialog )
+        public void ShowFileDialogForSignature(OpenFileDialog openFileDialog)
         {
             ShowFileDialog(openFileDialog, filter: "(*.jp2)|*.jp2| (*.jpg)|*.jpg| (*.png)|*.png", out _pathToTeacherSignature);
         }
-
-        private string _folderPath = string.Empty;
-        public string FolderPath { get { return _folderPath; } }
         public void ShowFolderDialog(FolderBrowserDialog folderBrowserDialog)
         {
             _folderPath = string.Empty;
@@ -49,63 +47,94 @@ namespace CourseWorkOfProgrammingTechnology
                 _folderPath = folderBrowserDialog.SelectedPath;
             }
         }
-
         public bool IsInputCompleted()
         {
             return _filePath != string.Empty && _pathToTeacherSignature != string.Empty && _folderPath != string.Empty;
         }
 
-        private string ConvertExcelCellToString(dynamic excelCell)
+        public (GeneralData, Criticism, Criticism, List<Student>) GetInputData()
         {
-            Excel.Range exCel = excelCell as Excel.Range;
-            string res = Convert.ToString(exCel.Value);
+            if (_filePath == string.Empty) { return (null, null, null, null); }
 
-            Marshal.ReleaseComObject(exCel);
+            GeneralData generalData = null;
+            Criticism advantages = null;
+            Criticism disadvantages = null;
+            List<Student> students = null;
 
-            return res;
+            ExcelAPI.Application excelAplication = null;
+
+            try
+            {
+                excelAplication = new ExcelAPI.Application(_filePath);
+
+                ExcelAPI.Cells cellsGeneralDataSheet = excelAplication.GetCellsWorkshit(1);
+                generalData = GetGeneralData(cellsGeneralDataSheet);
+
+                ExcelAPI.Cells cellsAdvantagesSheet = excelAplication.GetCellsWorkshit(2);
+                advantages = GetCriticism(cellsAdvantagesSheet);
+
+                ExcelAPI.Cells cellsDisadvantagesSheet = excelAplication.GetCellsWorkshit(3);
+                disadvantages = GetCriticism(cellsDisadvantagesSheet);
+
+                ExcelAPI.Cells cellsStudentsSheet = excelAplication.GetCellsWorkshit(4);
+                students = GetStudents(cellsStudentsSheet);
+            }
+            catch
+            {
+                Debug.WriteLine("Error ExcelAPI ban");
+            }
+            finally
+            {
+                excelAplication?.Quit();
+            }
+
+            return (generalData, advantages, disadvantages, students);
         }
 
-        private GeneralData GetGeneralData(Excel.Worksheet generalDataSheet)
+        private GeneralData GetGeneralData(ExcelAPI.Cells cellsGeneralDataSheet)
         {
-            Excel.Range cells = generalDataSheet.Cells;
-
             GeneralData generalData = new GeneralData();
             int row = 2;
-            generalData.Faculty = ConvertExcelCellToString(cells[row++, "B"]);
-            if (ConvertExcelCellToString(cells[row++, "B"]) == "+")
+            generalData.Faculty = cellsGeneralDataSheet[row++, "B"];
+            if (cellsGeneralDataSheet[row++, "B"] == "+")
             {
                 generalData.Type = "Проект";
             }
-            if (ConvertExcelCellToString(cells[row++, "B"]) == "+")
+            if (cellsGeneralDataSheet[row++, "B"] == "+")
             {
                 generalData.Type = "Работа";
             }
-            generalData.Course = ConvertExcelCellToString(cells[row++, "B"]);
-            generalData.DirectionOfTraining = ConvertExcelCellToString(cells[row++, "B"]);
-            generalData.Directivity = ConvertExcelCellToString(cells[row++, "B"]);
-            generalData.Teacher = ConvertExcelCellToString(cells[row++, "B"]);
-            generalData.AcademicTitleAndPosition = ConvertExcelCellToString(cells[row++, "B"]);
-            generalData.Group = ConvertExcelCellToString(cells[row++, "B"]);
-            generalData.Date = new Date(ConvertExcelCellToString(cells[row++, "B"]));
-
+            generalData.Course = cellsGeneralDataSheet[row++, "B"];
+            generalData.DirectionOfTraining = cellsGeneralDataSheet[row++, "B"];
+            generalData.Directivity = cellsGeneralDataSheet[row++, "B"];
+            generalData.Teacher = cellsGeneralDataSheet[row++, "B"];
+            generalData.AcademicTitleAndPosition = cellsGeneralDataSheet[row++, "B"];
+            generalData.Group = cellsGeneralDataSheet[row++, "B"];
+            generalData.Date = new Date(cellsGeneralDataSheet[row++, "B"]);
             generalData.PathToTeacherSignature = _pathToTeacherSignature;
 
             return generalData;
         }
-        private Criticism GetCriticism(Excel.Worksheet commentsSheet)
+        private Criticism GetCriticism(ExcelAPI.Cells cellsCommentsSheet)
         {
             Criticism criticism = new Criticism();
 
             int row = 2;
-            while (ConvertExcelCellToString(commentsSheet.Cells[row, "A"]) != null)
+            while (cellsCommentsSheet[row, "A"] != null)
             {
-                Comment comment = new Comment(ConvertExcelCellToString(commentsSheet.Cells[row, "A"]), (commentsSheet.Cells[row, "A"] as Excel.Range).Interior.ColorIndex);
-                if (ConvertExcelCellToString(commentsSheet.Cells[row, "B"]) == "+") { criticism[3].Add(comment); }
-                if (ConvertExcelCellToString(commentsSheet.Cells[row, "C"]) == "+") { criticism[4].Add(comment); }
-                if (ConvertExcelCellToString(commentsSheet.Cells[row, "D"]) == "+") { criticism[5].Add(comment); }
+                Comment comment = new Comment(cellsCommentsSheet[row, "A"], cellsCommentsSheet.GetCellColorIndex(row, "A"));
+                if (cellsCommentsSheet[row, "B"] == "+") { criticism[3].Add(comment); }
+                if (cellsCommentsSheet[row, "C"] == "+") { criticism[4].Add(comment); }
+                if (cellsCommentsSheet[row, "D"] == "+") { criticism[5].Add(comment); }
 
                 row++;
             }
+
+            criticism.numCommentsForRatings[5] = GetRange(cellsCommentsSheet[2, "G"]);
+            criticism.numCommentsForRatings[4] = GetRange(cellsCommentsSheet[3, "G"]);
+            criticism.numCommentsForRatings[3] = GetRange(cellsCommentsSheet[4, "G"]);
+
+            return criticism;
 
             (int, int) GetRange(string sRange)
             {
@@ -124,102 +153,22 @@ namespace CourseWorkOfProgrammingTechnology
 
                 return range;
             }
-            
-            criticism.numCommentsForRatings[5] = GetRange(ConvertExcelCellToString(commentsSheet.Cells[2, "G"]));
-            criticism.numCommentsForRatings[4] = GetRange(ConvertExcelCellToString(commentsSheet.Cells[3, "G"]));
-            criticism.numCommentsForRatings[3] = GetRange(ConvertExcelCellToString(commentsSheet.Cells[4, "G"]));
-
-            return criticism;
         }
-        private List<Student> GetStudents(Excel.Worksheet listOfStudentsSheet)
+        private List<Student> GetStudents(ExcelAPI.Cells cellsListOfStudentsSheet)
         {
             List<Student> students = new List<Student>();
             int row = 2;
-            while (ConvertExcelCellToString(listOfStudentsSheet.Cells[row, "A"]) != null)
+            while (cellsListOfStudentsSheet[row, "A"] != null)
             {
-                string name = ConvertExcelCellToString(listOfStudentsSheet.Cells[row, "A"]);
-                string nameInGenitiveCase = ConvertExcelCellToString(listOfStudentsSheet.Cells[row, "E"]);
-                string topicWork = ConvertExcelCellToString(listOfStudentsSheet.Cells[row, "B"]);
-                int rating = int.Parse(ConvertExcelCellToString(listOfStudentsSheet.Cells[row, "C"]));
+                string name = cellsListOfStudentsSheet[row, "A"];
+                string nameInGenitiveCase = cellsListOfStudentsSheet[row, "E"];
+                string topicWork = cellsListOfStudentsSheet[row, "B"];
+                int rating = int.Parse(cellsListOfStudentsSheet[row, "C"]);
                 students.Add(new Student(name, nameInGenitiveCase, topicWork, rating));
                 row++;
             }
 
             return students;
         }
-
-        public (GeneralData, Criticism, Criticism, List<Student>) GetInputData()
-        {
-            if (_filePath == string.Empty) { return (null, null, null, null); }
-
-            Object oMissing = System.Reflection.Missing.Value;
-
-            GeneralData generalData = null;
-            Criticism advantages = null;
-            Criticism disadvantages = null;
-            List<Student> students = null;
-
-            Comment.defaultColor = (int)Excel.XlColorIndex.xlColorIndexNone;
-
-            Excel.Application excelApp = null;
-            Excel.Workbooks workbooks = null;
-            Excel.Workbook inputDataBook = null;
-            Excel.Sheets sheets = null;
-            
-            try
-            {
-                // Create object of Excel.
-                excelApp = new Excel.Application();
-                workbooks = excelApp.Workbooks;
-                // Open the workbook for read-only.
-                inputDataBook = workbooks.Open(
-                    _filePath,
-                    oMissing, true, oMissing, oMissing,
-                    oMissing, oMissing, oMissing, oMissing,
-                    oMissing, oMissing, oMissing, oMissing,
-                    oMissing, oMissing);
-                sheets = inputDataBook.Sheets;
-
-                Excel.Worksheet generalDataSheet = (Excel.Worksheet)sheets[1];
-                generalData = GetGeneralData(generalDataSheet);
-                Marshal.ReleaseComObject(generalDataSheet);
-                generalDataSheet = null;
-
-                Excel.Worksheet advantagesSheet = (Excel.Worksheet)sheets[2];
-                advantages = GetCriticism(advantagesSheet);
-                Marshal.ReleaseComObject(advantagesSheet);
-                advantagesSheet = null;
-
-                Excel.Worksheet disadvantagesSheet = (Excel.Worksheet)sheets[3];
-                disadvantages = GetCriticism(disadvantagesSheet);
-                Marshal.ReleaseComObject(disadvantagesSheet);
-                disadvantagesSheet = null;
-
-                Excel.Worksheet studentsSheet = (Excel.Worksheet)sheets[4];
-                students = GetStudents(studentsSheet);
-                Marshal.ReleaseComObject(studentsSheet);
-                studentsSheet = null;
-            }
-            finally
-            {
-                inputDataBook.Close(false, oMissing, oMissing);
-                workbooks.Close();
-                excelApp.Quit();
-
-                Marshal.ReleaseComObject(sheets);
-                Marshal.ReleaseComObject(inputDataBook);
-                Marshal.ReleaseComObject(workbooks);
-                Marshal.ReleaseComObject(excelApp);
-
-                sheets = null;
-                inputDataBook = null;
-                workbooks = null;
-                excelApp = null;
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-            }
-
-            return (generalData, advantages, disadvantages, students);
-        }//конец функции
     }
 }

@@ -29,7 +29,7 @@ namespace CourseWorkOfProgrammingTechnology
         /// </summary>
         private void InitializeComponent()
         {
-            this.button1 = new System.Windows.Forms.Button();
+            this.buttonOk = new System.Windows.Forms.Button();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.pathInputDataFile = new System.Windows.Forms.Label();
             this.SelectingInputDataFile = new System.Windows.Forms.Button();
@@ -40,15 +40,15 @@ namespace CourseWorkOfProgrammingTechnology
             this.pathToTeacherSignature = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
-            // button1
+            // buttonOk
             // 
-            this.button1.Location = new System.Drawing.Point(342, 358);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(94, 29);
-            this.button1.TabIndex = 0;
-            this.button1.Text = "Ok";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.Ok_Click);
+            this.buttonOk.Location = new System.Drawing.Point(342, 358);
+            this.buttonOk.Name = "buttonOk";
+            this.buttonOk.Size = new System.Drawing.Size(94, 29);
+            this.buttonOk.TabIndex = 0;
+            this.buttonOk.Text = "Ok";
+            this.buttonOk.UseVisualStyleBackColor = true;
+            this.buttonOk.Click += new System.EventHandler(this.Ok_Click);
             // 
             // openFileDialog1
             // 
@@ -122,7 +122,7 @@ namespace CourseWorkOfProgrammingTechnology
             this.Controls.Add(this.pathFolderToSave);
             this.Controls.Add(this.SelectingInputDataFile);
             this.Controls.Add(this.pathInputDataFile);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.buttonOk);
             this.MaximizeBox = false;
             this.Name = "Form1";
             this.Text = "Review Generator";
@@ -133,7 +133,7 @@ namespace CourseWorkOfProgrammingTechnology
 
         #endregion
 
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button buttonOk;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.Label pathInputDataFile;
         private System.Windows.Forms.Button SelectingInputDataFile;
