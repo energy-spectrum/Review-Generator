@@ -1,46 +1,5 @@
 ﻿namespace CourseWorkOfProgrammingTechnology
 {
-    class Date
-    {
-        readonly public string day, month, year;
-        public Date(string day, string month, string year)
-        {
-            this.day = day;
-            this.month = month;
-            this.year = year;
-        }
-        public Date(string sDate)
-        {
-            //string[] months =
-            //{
-            //    "январь",
-            //    "февраль",
-            //    "март",
-            //    "апрель",
-            //    "май",
-            //    "июнь",
-            //    "июль",
-            //    "август",
-            //    "сеньтябрь",
-            //    "октябрь",
-            //    "ноябрь",
-            //    "декабрь"
-            //};
-            string[] aDate = sDate.Split('.');
-            this.day = aDate[0];
-            if (this.day.Length == 1) { this.day = "0" + this.day; }
-
-            this.month = aDate[1];
-            if (this.month.Length == 1) { this.month = "0" + this.month; }
-
-            //Это значит, что в дату залезло и время
-            if (aDate[2].Contains(' '))
-                this.year = aDate[2].Split(' ')[0];
-            else
-                this.year = aDate[2];
-        }
-    }
-
     class GeneralData
     {
         private string _faculty,
@@ -50,8 +9,7 @@
                       _directivity,
                       _teacher,
                       _academicTitleAndPosition,
-                      _group,
-                      _pathToTeacherSignature;
+                      _group;
 
         private Date _date;
 
@@ -102,18 +60,18 @@
             set { if (_date == null) { _date = value; } }
         }
        
-        public string PathToTeacherSignature
-        {
-            get { return _pathToTeacherSignature; }
-            set { if (_pathToTeacherSignature == null) { _pathToTeacherSignature = value; } }
-        }
-
         public string Teacher
         {
-            get { return _teacher; }
+            get 
+            {
+                return _teacher; 
+            }
             set
             {
-                if(_teacher != null) { return; }
+                if(_teacher != null) 
+                {
+                    return; 
+                }
 
                 _teacher = value;
                 string[] name = _teacher.Split();
@@ -146,6 +104,42 @@
         {
             get { return _initialsAndSurnameTeacher; }
             private set { if (_initialsAndSurnameTeacher == null) { _initialsAndSurnameTeacher = value; } }
+        }
+    }
+
+    class Date
+    {
+        readonly public string day, month, year;
+        public Date(string day, string month, string year)
+        {
+            this.day = day;
+            this.month = month;
+            this.year = year;
+        }
+        public Date(string sDate)
+        {
+            string[] aDate = sDate.Split('.');
+            this.day = aDate[0];
+            if (this.day.Length == 1)
+            {
+                this.day = "0" + this.day;
+            }
+
+            this.month = aDate[1];
+            if (this.month.Length == 1)
+            {
+                this.month = "0" + this.month;
+            }
+
+            //Это значит, что в дату залезло и время
+            if (aDate[2].Contains(' '))
+            {
+                this.year = aDate[2].Split(' ')[0];
+            }
+            else
+            {
+                this.year = aDate[2];
+            }
         }
     }
 }

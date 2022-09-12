@@ -53,7 +53,7 @@
     <None Update="Properties\BaseSignature.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Properties\Rewio.doc">
+    <None Update="Properties\Review.doc">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

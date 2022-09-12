@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 using Excel = Microsoft.Office.Interop.Excel;
@@ -13,48 +12,48 @@ namespace ExcelAPI
         private Excel.Workbook _inputDataBook = null;
         private Excel.Sheets _sheets = null;
 
-        private Object oMissing = System.Reflection.Missing.Value;
-
         public event Action OnQuit;
 
-        public Cells GetCellsWorkshit(int index)
+        public Application()
         {
-            Cells cells = new Cells((Excel.Worksheet)_sheets[index]);
-            OnQuit += cells.Quit;
-            return cells;
+            RunExcelApplication();
         }
 
-        public Application(string filePath)
+        private void RunExcelApplication()
         {
-            TryOpenExcelFile(filePath);
+            try
+            {
+                TryRunExcelApplication();
+            }
+            catch
+            {
+                Quit();
+                throw new Exception("Error run Excel application");
+            }
+        }
+
+        private void TryRunExcelApplication()
+        {
+            _excelApp = new Excel.Application();
+            _workbooks = _excelApp.Workbooks;
+        }
+
+        public void OpenExcelFile(string filePath)
+        {
+            try
+            {
+                TryOpenExcelFile(filePath);
+            }
+            catch
+            {
+                Quit();
+                throw new Exception("Error open file: " + filePath);
+            }
         }
 
         private void TryOpenExcelFile(string filePath)
         {
-            try
-            {
-                OpenExcelFile(filePath);
-            }
-            catch
-            {
-                Debug.WriteLine("Error open file");
-                Quit();
-            }
-        }
-
-        private void OpenExcelFile(string filePath)
-        {
-            // Create object of Excel.
-            _excelApp = new Excel.Application();
-            _workbooks = _excelApp.Workbooks;
-            // Open the workbook for read-only.
-            _inputDataBook = _workbooks.Open(
-                filePath,
-                oMissing, true, oMissing, oMissing,
-                oMissing, oMissing, oMissing, oMissing,
-                oMissing, oMissing, oMissing, oMissing,
-                oMissing, oMissing);
-
+            _inputDataBook = _workbooks.Open(Filename: filePath, ReadOnly: true);
             _sheets = _inputDataBook.Sheets;
         }
 
@@ -63,13 +62,14 @@ namespace ExcelAPI
             OnQuit?.Invoke();
             CloseExcelApplication();
             ReleaseAllComObjects();
+            ClearMemory();
         }
 
         private void CloseExcelApplication()
         {
-            _inputDataBook.Close(false, oMissing, oMissing);
-            _workbooks.Close();
-            _excelApp.Quit();
+            _inputDataBook?.Close(SaveChanges: false);
+            _workbooks?.Close();
+            _excelApp?.Quit();
         }
 
         private void ReleaseAllComObjects()
@@ -82,19 +82,27 @@ namespace ExcelAPI
             _workbooks = null;
             Marshal.ReleaseComObject(_excelApp);
             _excelApp = null;
-
         }
 
-        ////private void Clear()
-        ////{
-        ////    //GC.Collect();
-        ////    //GC.WaitForPendingFinalizers();
-        ////}
+        private void ClearMemory()
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
+        public Cells GetCellsWorkshit(int index)
+        {
+            Cells cells = new Cells((Excel.Worksheet)_sheets[index]);
+            OnQuit += cells.ReleaseAllComObjects;
+
+            return cells;
+        }
     }
 
     class Cells
     {
         private Excel.Worksheet _worksheet;
+
         public Cells(Excel.Worksheet worksheet)
         {
             this._worksheet = worksheet;
@@ -115,6 +123,7 @@ namespace ExcelAPI
         private string ConvertExcelCellToString(Excel.Range excelCell)
         {
             string value = Convert.ToString(excelCell.Value);
+
             return value;
         }
 
@@ -127,7 +136,7 @@ namespace ExcelAPI
             return colorIndex;
         }
 
-        public void Quit()
+        public void ReleaseAllComObjects()
         {
             Marshal.ReleaseComObject(_worksheet);
             _worksheet = null;

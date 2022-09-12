@@ -6,7 +6,13 @@ namespace CourseWorkOfProgrammingTechnology
     {
         private Dictionary<int, List<Comment>> _commentsForRatings;
         readonly public Dictionary<int, (int, int)> numCommentsForRatings;
-        public List<Comment> this[int rating] { get { return _commentsForRatings[rating]; } }
+        public List<Comment> this[int rating] 
+        { 
+            get 
+            { 
+                return _commentsForRatings[rating]; 
+            }
+        }
         public Criticism()
         {
             _commentsForRatings = new Dictionary<int, List<Comment>>()
